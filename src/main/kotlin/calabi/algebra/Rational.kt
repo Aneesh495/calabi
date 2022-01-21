@@ -12,10 +12,14 @@ import java.math.MathContext
  * - gcd(numerator, denominator) == 1
  * - zero is represented uniquely as 0/1
  */
-data class Rational private constructor(
+data class Rational(
     val num: BigInteger,
     val den: BigInteger
 ) : Number(), Comparable<Rational> {
+
+    init {
+        require(den > BigInteger.ZERO) { "Denominator must be strictly positive" }
+    }
 
     operator fun plus(other: Rational): Rational {
         val n = num.multiply(other.den).add(other.num.multiply(den))
@@ -121,6 +125,21 @@ data class Rational private constructor(
             of(BigInteger.valueOf(numerator.toLong()), BigInteger.valueOf(denominator.toLong()))
 
         /**
+         * Binomial coefficient C(n, k).
+         */
+        fun binomial(n: Int, k: Int): BigInteger {
+            if (k < 0 || k > n) return BigInteger.ZERO
+            if (k == 0 || k == n) return BigInteger.ONE
+            val m = if (k > n - k) n - k else k
+            var result = BigInteger.ONE
+            for (i in 1..m) {
+                result = result.multiply(BigInteger.valueOf((n - i + 1).toLong()))
+                    .divide(BigInteger.valueOf(i.toLong()))
+            }
+            return result
+        }
+
+        /**
          * Harmonic number H_n = sum_{k=1}^n 1/k.
          */
         fun harmonic(n: Int): Rational {
@@ -133,19 +152,22 @@ data class Rational private constructor(
         }
 
         /**
-         * Computes the Bernoulli numbers B_n for small to medium n.
-         * B_0 = 1, B_1 = -1/2, B_2 = 1/6, B_4 = -1/30, B_6 = 1/42, ...
+         * First Bernoulli numbers B_n (with B_1 = -1/2) via the exact recursive definition:
+         * B_m = -1/(m+1) * sum_{k=0}^{m-1} binom(m+1, k) * B_k
          */
         fun bernoulli(n: Int): Rational {
             require(n >= 0) { "Index must be non-negative" }
-            val a = Array(n + 1) { ZERO }
-            for (m in 0..n) {
-                a[m] = of(1, m + 1)
-                for (j in m downTo 1) {
-                    a[j - 1] = (a[j - 1] - a[j]) * of(j)
+            val b = Array(n + 1) { ZERO }
+            b[0] = ONE
+            for (m in 1..n) {
+                var sum = ZERO
+                for (k in 0 until m) {
+                    val c = binomial(m + 1, k)
+                    sum += b[k] * of(c, BigInteger.ONE)
                 }
+                b[m] = -sum / (m + 1)
             }
-            return a[0]
+            return b[n]
         }
     }
 }

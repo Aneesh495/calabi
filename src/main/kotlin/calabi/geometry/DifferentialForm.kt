@@ -68,13 +68,11 @@ data class FormBasisIndex(
             if ((maskA and maskB) != 0) return null // Shared coordinate vanishes
             val union = maskA or maskB
 
-            // Compute permutation parity: number of inversions between set bits of A and B
             var inversions = 0
             var tempA = maskA
             var idxA = 0
             while (tempA > 0) {
                 if ((tempA and 1) == 1) {
-                    // Count bits in maskB that are strictly smaller than idxA
                     val smallerInB = Integer.bitCount(maskB and ((1 shl idxA) - 1))
                     val largerInB = Integer.bitCount(maskB) - smallerInB
                     inversions += largerInB
@@ -94,11 +92,10 @@ data class FormBasisIndex(
  */
 data class DifferentialForm(
     val manifoldDimension: Int,
+    val p: Int,
+    val q: Int,
     val components: Map<FormBasisIndex, Complex>
 ) {
-    val p: Int = components.keys.firstOrNull()?.p ?: 0
-    val q: Int = components.keys.firstOrNull()?.q ?: 0
-
     init {
         for (k in components.keys) {
             require(k.p == p && k.q == q) {
@@ -109,6 +106,8 @@ data class DifferentialForm(
 
     operator fun plus(other: DifferentialForm): DifferentialForm {
         require(manifoldDimension == other.manifoldDimension) { "Manifold dimension mismatch" }
+        if (components.isEmpty()) return other
+        if (other.components.isEmpty()) return this
         require(p == other.p && q == other.q) { "Form degree mismatch: ($p, $q) vs (${other.p}, ${other.q})" }
         val newComps = HashMap(components)
         for ((basis, coeff) in other.components) {
@@ -120,18 +119,18 @@ data class DifferentialForm(
                 newComps[basis] = updated
             }
         }
-        return DifferentialForm(manifoldDimension, newComps)
+        return DifferentialForm(manifoldDimension, p, q, newComps)
     }
 
     operator fun minus(other: DifferentialForm): DifferentialForm =
         this + (-other)
 
     operator fun unaryMinus(): DifferentialForm =
-        DifferentialForm(manifoldDimension, components.mapValues { -it.value })
+        DifferentialForm(manifoldDimension, p, q, components.mapValues { -it.value })
 
     operator fun times(scalar: Complex): DifferentialForm {
         if (scalar.isZero(1e-15)) return zero(manifoldDimension, p, q)
-        return DifferentialForm(manifoldDimension, components.mapValues { it.value * scalar })
+        return DifferentialForm(manifoldDimension, p, q, components.mapValues { it.value * scalar })
     }
 
     operator fun times(scalar: Double): DifferentialForm =
@@ -153,12 +152,9 @@ data class DifferentialForm(
 
         for ((basisA, coeffA) in components) {
             for ((basisB, coeffB) in other.components) {
-                // Wedge holomorphic parts: dz_I wedge dz_K
                 val wedgedH = FormBasisIndex.wedgeMasks(basisA.holomorphicMask, basisB.holomorphicMask) ?: continue
-                // Wedge anti-holomorphic parts: dbar{z}_J wedge dbar{z}_L
                 val wedgedAH = FormBasisIndex.wedgeMasks(basisA.antiHolomorphicMask, basisB.antiHolomorphicMask) ?: continue
 
-                // Commutation sign: pushing dz_K across dbar{z}_J introduces (-1)^(q_A * p_B)
                 val commuteParity = (basisA.q * basisB.p) and 1
                 val commuteSign = if (commuteParity == 0) 1 else -1
 
@@ -176,7 +172,7 @@ data class DifferentialForm(
             }
         }
 
-        return DifferentialForm(manifoldDimension, newComps)
+        return DifferentialForm(manifoldDimension, newP, newQ, newComps)
     }
 
     /**
@@ -190,28 +186,26 @@ data class DifferentialForm(
             val swapped = FormBasisIndex(basis.antiHolomorphicMask, basis.holomorphicMask)
             newComps[swapped] = coeff.conj() * sign
         }
-        return DifferentialForm(manifoldDimension, newComps)
+        return DifferentialForm(manifoldDimension, q, p, newComps)
     }
 
     companion object {
-        fun zero(dim: Int, p: Int = 0, q: Int = 0): DifferentialForm {
-            val zeroMap = emptyMap<FormBasisIndex, Complex>()
-            return DifferentialForm(dim, zeroMap)
-        }
+        fun zero(dim: Int, p: Int = 0, q: Int = 0): DifferentialForm =
+            DifferentialForm(dim, p, q, emptyMap())
 
         fun scalar(dim: Int, value: Complex): DifferentialForm =
-            DifferentialForm(dim, mapOf(FormBasisIndex.SCALAR to value))
+            DifferentialForm(dim, 0, 0, mapOf(FormBasisIndex.SCALAR to value))
 
         fun dz(dim: Int, index: Int): DifferentialForm {
             require(index in 0 until dim) { "Index $index out of bounds for dim $dim" }
             val basis = FormBasisIndex(1 shl index, 0)
-            return DifferentialForm(dim, mapOf(basis to Complex.ONE))
+            return DifferentialForm(dim, 1, 0, mapOf(basis to Complex.ONE))
         }
 
         fun dbarZ(dim: Int, index: Int): DifferentialForm {
             require(index in 0 until dim) { "Index $index out of bounds for dim $dim" }
             val basis = FormBasisIndex(0, 1 shl index)
-            return DifferentialForm(dim, mapOf(basis to Complex.ONE))
+            return DifferentialForm(dim, 0, 1, mapOf(basis to Complex.ONE))
         }
 
         /**
@@ -221,7 +215,7 @@ data class DifferentialForm(
             var form = zero(dim, 1, 1)
             val coeff = Complex.I * 0.5
             for (k in 0 until dim) {
-                val term = DifferentialForm(dim, mapOf(FormBasisIndex(1 shl k, 1 shl k) to coeff))
+                val term = DifferentialForm(dim, 1, 1, mapOf(FormBasisIndex(1 shl k, 1 shl k) to coeff))
                 form += term
             }
             return form

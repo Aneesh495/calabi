@@ -4,7 +4,7 @@ import calabi.algebra.AffineCoordinates
 import calabi.algebra.Complex
 import calabi.algebra.HomogeneousPoint
 import calabi.algebra.Polynomial
-import kotlin.math.abs
+import kotlin.math.pow
 
 /**
  * PoincareResidue computes the nowhere-vanishing holomorphic (n, 0)-volume form Omega
@@ -96,7 +96,7 @@ class PoincareResidue(
         // Account for projective scaling factor: sum |z_i|^2
         val homo = affine.toHomogeneous()
         val normSq = homo.coordinates.sumOf { it.normSq() }
-        val scaling = kotlin.math.pow(normSq, ambientDimension.toDouble())
+        val scaling = normSq.pow(ambientDimension.toDouble())
         return cyDensity * scaling / fsDensity
     }
 }

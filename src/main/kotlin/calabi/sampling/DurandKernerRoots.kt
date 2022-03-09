@@ -39,7 +39,7 @@ object DurandKernerRoots {
             // Quadratic formula: t = (-c_1 +/- sqrt(c_1^2 - 4 c_0)) / 2
             val b = monic[1]
             val c = monic[0]
-            val disc = (b * b - 4.0 * c).sqrt()
+            val disc = (b * b - c * 4.0).sqrt()
             val r1 = (-b + disc) / 2.0
             val r2 = (-b - disc) / 2.0
             return listOf(r1, r2)

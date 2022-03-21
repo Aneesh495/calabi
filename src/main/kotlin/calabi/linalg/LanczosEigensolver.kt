@@ -88,7 +88,6 @@ class LanczosEigensolver(
                 beta[j] = bet
 
                 if (bet < 1e-13) {
-                    // Krylov subspace invariant, truncate
                     return Pair(alpha.copyOf(j + 1), beta.copyOf(j))
                 }
 
@@ -120,11 +119,11 @@ class LanczosEigensolver(
                 var m = l
                 while (m < k - 1) {
                     val dd = abs(d[m]) + abs(d[m + 1])
-                    if (abs(e[m]) + dd == dd) break
+                    if (abs(e[m]) <= 1e-15 * dd) break
                     m++
                 }
                 if (m == l) break
-                require(iter++ < 60) { "Too many iterations in tridiagonal QR algorithm" }
+                require(iter++ < 100) { "Too many iterations in tridiagonal QR algorithm" }
 
                 var g = (d[l + 1] - d[l]) / (2.0 * e[l])
                 var r = kotlin.math.hypot(g, 1.0)
@@ -133,6 +132,7 @@ class LanczosEigensolver(
                 var c = 1.0
                 var p = 0.0
 
+                var brokenEarly = false
                 for (i in (m - 1) downTo l) {
                     var f = s * e[i]
                     val b = c * e[i]
@@ -141,6 +141,7 @@ class LanczosEigensolver(
                     if (r == 0.0) {
                         d[i + 1] -= p
                         e[m] = 0.0
+                        brokenEarly = true
                         break
                     }
                     s = f / r
@@ -151,7 +152,7 @@ class LanczosEigensolver(
                     d[i + 1] = g + p
                     g = c * r - b
                 }
-                if (r == 0.0 && i >= l) continue
+                if (brokenEarly) continue
                 d[l] -= p
                 e[l] = g
                 e[m] = 0.0
@@ -163,7 +164,7 @@ class LanczosEigensolver(
     }
 
     /**
-     * Computes the k smallest and largest eigenvalues of the Hermitian matrix.
+     * Computes the eigenvalues of the Hermitian matrix using Lanczos.
      */
     fun computeEigenvalues(steps: Int = 30): DoubleArray {
         val (alpha, beta) = tridiagonalize(steps)

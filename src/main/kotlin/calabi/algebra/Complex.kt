@@ -185,6 +185,22 @@ data class Complex(
     fun isReal(tolerance: Double = 1e-14): Boolean =
         abs(im) <= tolerance
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Complex) return false
+        val rA = if (re == 0.0) 0.0 else re
+        val rB = if (other.re == 0.0) 0.0 else other.re
+        val iA = if (im == 0.0) 0.0 else im
+        val iB = if (other.im == 0.0) 0.0 else other.im
+        return rA == rB && iA == iB
+    }
+
+    override fun hashCode(): Int {
+        val r = if (re == 0.0) 0.0 else re
+        val i = if (im == 0.0) 0.0 else im
+        return 31 * r.hashCode() + i.hashCode()
+    }
+
     override fun compareTo(other: Complex): Int {
         val c = re.compareTo(other.re)
         return if (c != 0) c else im.compareTo(other.im)

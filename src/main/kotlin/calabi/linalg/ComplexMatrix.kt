@@ -125,8 +125,9 @@ class ComplexMatrix(
             for (c in 0 until cols) {
                 val srcOff = offset(r, c)
                 val dstOff = res.offset(c, r)
+                val im = data[srcOff + 1]
                 res.data[dstOff] = data[srcOff]
-                res.data[dstOff + 1] = -data[srcOff + 1]
+                res.data[dstOff + 1] = if (im == 0.0) 0.0 else -im
             }
         }
         return res

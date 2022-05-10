@@ -6,7 +6,7 @@ import calabi.algebra.Complex
  * YukawaCoupling computes the topological 3-point Yukawa coupling C_{ttt} on the mirror quintic
  * as a function of the flat coordinate q = exp(2 * pi * i * t).
  *
- *   C_{ttt}(q) = (5 / (1 - 5^5 * z(q))) * ( (1 / varpi_0(z(q))) * (q / z(q)) * (dz / dq) )^3
+ *   C_{ttt}(q) = (5 / (1 - 5^5 * z(q))) * (1 / varpi_0(z(q))^2) * ( (q / z(q)) * (dz / dq) )^3
  *
  * The genus-0 topological A-model expansion gives:
  *   C_{ttt}(q) = 5 + sum_{d=1}^infty n_d * d^3 * (q^d / (1 - q^d))
@@ -18,7 +18,6 @@ class YukawaCoupling(
      * Evaluates C_{ttt}(q) for a specific complex value of q.
      */
     fun evaluate(q: Complex, zInvSeries: DoubleArray): Complex {
-        // Evaluate z(q)
         var z = Complex.ZERO
         var qPow = Complex.ONE
         for (k in zInvSeries.indices) {
@@ -26,7 +25,6 @@ class YukawaCoupling(
             qPow *= q
         }
 
-        // dz/dq series
         var dzDq = Complex.ZERO
         var qPowDer = Complex.ONE
         for (k in 1 until zInvSeries.size) {
@@ -36,11 +34,12 @@ class YukawaCoupling(
 
         val varpi0 = mirrorMap.frobenius.evaluateVarpi0(z)
         val denom1 = Complex.ONE - (z * 3125.0)
+        val varpi0Sq = varpi0 * varpi0
 
-        val ratio = (Complex.ONE / varpi0) * (q / z) * dzDq
+        val ratio = (q / z) * dzDq
         val ratio3 = ratio.pow(3)
 
-        return (Complex.ofReal(5.0) / denom1) * ratio3
+        return (Complex.ofReal(5.0) / (denom1 * varpi0Sq)) * ratio3
     }
 
     /**
@@ -50,7 +49,6 @@ class YukawaCoupling(
         val zCoeffs = mirrorMap.computeInverseZSeries(order + 4)
         val cCoeffs = DoubleArray(order + 4) { i -> mirrorMap.frobenius.cCoeffs[i].toDouble() }
 
-        // Expand z(q), dz/dq, varpi_0(z(q)), and (1 - 3125 z(q))^{-1}
         // dz/dq = sum_{k=0} (k+1) z_{k+1} q^k
         val dzDq = DoubleArray(order + 1)
         for (k in 0..order) {
@@ -64,17 +62,17 @@ class YukawaCoupling(
         }
         val invZNorm = invertSeries(zNorm, order)
 
+        // Factor G = (q / z) * (dz / dq)
+        val gSeries = multiplySeries(invZNorm, dzDq, order)
+
+        // G^3
+        val g2 = multiplySeries(gSeries, gSeries, order)
+        val g3 = multiplySeries(g2, gSeries, order)
+
         // varpi_0(z(q)) series
         val varpi0Z = substituteSeries(cCoeffs, zCoeffs, order)
-        val invVarpi0 = invertSeries(varpi0Z, order)
-
-        // Factor F = (1 / varpi_0) * (q / z) * (dz / dq)
-        val prod1 = multiplySeries(invVarpi0, invZNorm, order)
-        val fSeries = multiplySeries(prod1, dzDq, order)
-
-        // F^3
-        val f2 = multiplySeries(fSeries, fSeries, order)
-        val f3 = multiplySeries(f2, fSeries, order)
+        val varpi0Sq = multiplySeries(varpi0Z, varpi0Z, order)
+        val invVarpi0Sq = invertSeries(varpi0Sq, order)
 
         // 1 / (1 - 3125 * z(q))
         val denomP = DoubleArray(order + 1)
@@ -84,8 +82,9 @@ class YukawaCoupling(
         }
         val invDenom = invertSeries(denomP, order)
 
-        // C_{ttt} = 5 * invDenom * F^3
-        val cttt = multiplySeries(invDenom, f3, order)
+        // C_{ttt} = 5 * invDenom * invVarpi0Sq * G^3
+        val pre = multiplySeries(invDenom, invVarpi0Sq, order)
+        val cttt = multiplySeries(pre, g3, order)
         for (k in 0..order) {
             cttt[k] *= 5.0
         }
@@ -117,7 +116,6 @@ class YukawaCoupling(
     }
 
     private fun substituteSeries(f: DoubleArray, g: DoubleArray, order: Int): DoubleArray {
-        // Computes f(g(q)) where g(0) = 0
         val res = DoubleArray(order + 1)
         res[0] = f[0]
 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calabi: Calabi-Yau Metric & Mirror Symmetry Laboratory</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="app-container">
+        <header id="header">
+            <div class="header-left">
+                <h1>CALABI</h1>
+                <span class="badge">Ricci-Flat Kähler Geometry</span>
+            </div>
+            <div class="header-right">
+                <span class="status-indicator online"></span>
+                <span>Donaldson Numerical Engine v1.0.0</span>
+            </div>
+        </header>
+
+        <main id="main-content">
+            <div id="viewport-container">
+                <canvas id="webgl-canvas"></canvas>
+                <div id="viewport-overlay">
+                    <div class="hud-metric">
+                        <span class="hud-label">Variety</span>
+                        <span class="hud-value" id="hud-variety">Quintic Threefold X_5 ⊂ ℙ⁴</span>
+                    </div>
+                    <div class="hud-metric">
+                        <span class="hud-label">Euler Characteristic</span>
+                        <span class="hud-value">χ = -200</span>
+                    </div>
+                    <div class="hud-metric">
+                        <span class="hud-label">Hodge Numbers</span>
+                        <span class="hud-value">(h¹'¹, h²'¹) = (1, 101)</span>
+                    </div>
+                    <div class="hud-metric">
+                        <span class="hud-label">Current σ-Measure</span>
+                        <span class="hud-value" id="hud-sigma">σ = 0.0418</span>
+                    </div>
+                </div>
+            </div>
+
+            <aside id="sidebar">
+                <section class="panel">
+                    <h2>Manifold Controls</h2>
+                    <div class="control-group">
+                        <label for="slider-psi">Dwork Parameter ψ: <span id="val-psi">0.00</span></label>
+                        <input type="range" id="slider-psi" min="0.0" max="4.9" step="0.05" value="0.0">
+                        <span class="hint">Conifold singular point at ψ = 5.0 (3125)</span>
+                    </div>
+                    <div class="control-group">
+                        <label for="slider-slice">Cross-Section Slice Angle: <span id="val-slice">0.00</span> rad</label>
+                        <input type="range" id="slider-slice" min="0.0" max="6.28" step="0.05" value="0.0">
+                    </div>
+                    <div class="control-group">
+                        <label for="select-color">Surface Coloring</label>
+                        <select id="select-color">
+                            <option value="curvature">Ricci Curvature Deviation |R|</option>
+                            <option value="potential">Kähler Potential K_FS</option>
+                            <option value="normals">Normal Direction Vector</option>
+                        </select>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>Donaldson Metric Convergence</h2>
+                    <div class="canvas-chart-box">
+                        <canvas id="chart-convergence" width="300" height="150"></canvas>
+                    </div>
+                    <div class="stats-table">
+                        <div class="stat-row">
+                            <span>Section Degree (k)</span>
+                            <span>Monomials N_k</span>
+                            <span>Error σ</span>
+                        </div>
+                        <div class="stat-row highlight">
+                            <span>k = 1</span>
+                            <span>5</span>
+                            <span>0.1824</span>
+                        </div>
+                        <div class="stat-row highlight">
+                            <span>k = 2</span>
+                            <span>15</span>
+                            <span>0.0762</span>
+                        </div>
+                        <div class="stat-row highlight">
+                            <span>k = 3</span>
+                            <span>35</span>
+                            <span>0.0381</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <h2>Mirror Symmetry Instantons</h2>
+                    <p class="panel-desc">Exact rational curve counts on the quintic threefold via Picard-Fuchs Frobenius inversion:</p>
+                    <div class="instanton-list">
+                        <div class="instanton-card">
+                            <div class="instanton-deg">Degree d = 1 (Lines)</div>
+                            <div class="instanton-val">n₁ = 2,875</div>
+                            <div class="instanton-sub">Schubert (1879)</div>
+                        </div>
+                        <div class="instanton-card">
+                            <div class="instanton-deg">Degree d = 2 (Conics)</div>
+                            <div class="instanton-val">n₂ = 609,250</div>
+                            <div class="instanton-sub">Katz (1986)</div>
+                        </div>
+                        <div class="instanton-card">
+                            <div class="instanton-deg">Degree d = 3 (Cubics)</div>
+                            <div class="instanton-val">n₃ = 317,206,375</div>
+                            <div class="instanton-sub">Ellingsrud-Strømme (1991)</div>
+                        </div>
+                        <div class="instanton-card">
+                            <div class="instanton-deg">Degree d = 4 (Quartics)</div>
+                            <div class="instanton-val">n₄ = 242,467,530,000</div>
+                            <div class="instanton-sub">Candelas et al. (1991)</div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

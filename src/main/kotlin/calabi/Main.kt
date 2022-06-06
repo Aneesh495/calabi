@@ -1,0 +1,34 @@
+package calabi
+
+import calabi.cli.CommandDispatcher
+import calabi.cli.Repl
+
+fun main(args: Array<String>) {
+    if (args.isEmpty()) {
+        Repl().run()
+        return
+    }
+
+    val dispatcher = CommandDispatcher()
+    when (args[0]) {
+        "--bench", "-b" -> {
+            println("Running Calabi performance benchmarks...")
+            dispatcher.handleCommand(":donaldson 2 5")
+            dispatcher.handleCommand(":instantons 4")
+        }
+        "--instantons", "-i" -> {
+            dispatcher.handleCommand(":instantons 4")
+        }
+        "--donaldson", "-d" -> {
+            val k = args.getOrNull(1)?.toIntOrNull() ?: 1
+            dispatcher.handleCommand(":donaldson $k 5")
+        }
+        "--help", "-h" -> {
+            dispatcher.handleCommand(":help")
+        }
+        else -> {
+            val cmd = args.joinToString(" ")
+            dispatcher.handleCommand(cmd)
+        }
+    }
+}

@@ -12,9 +12,7 @@ fun main(args: Array<String>) {
     val dispatcher = CommandDispatcher()
     when (args[0]) {
         "--bench", "-b" -> {
-            println("Running Calabi performance benchmarks...")
-            dispatcher.handleCommand(":donaldson 2 5")
-            dispatcher.handleCommand(":instantons 4")
+            calabi.bench.BenchmarkHarness.runAll()
         }
         "--instantons", "-i" -> {
             dispatcher.handleCommand(":instantons 4")

@@ -16,6 +16,12 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.11.4")
 }
 
+sourceSets {
+    main {
+        kotlin.srcDirs("src/main/kotlin", "bench/src/main/kotlin")
+    }
+}
+
 application {
     mainClass.set("calabi.MainKt")
 }

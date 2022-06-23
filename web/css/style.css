@@ -281,3 +281,23 @@ body {
     font-size: 0.7rem;
     color: var(--text-secondary);
 }
+
+.preview-context {
+  margin: 0;
+  padding: .6rem 1rem;
+  background: #121b27;
+  color: #d6e2ed;
+  font: 400 .85rem/1.45 system-ui, sans-serif;
+  overflow-wrap: anywhere;
+}
+.preview-context a { color: #9bdeff; }
+:focus-visible { outline: 3px solid #9bdeff; outline-offset: 2px; }
+
+#main-content { min-height: 0; }
+@media (max-width: 760px) {
+  body, #app-container { height: auto; min-height: 100vh; overflow: auto; }
+  #header { flex-wrap: wrap; gap: .5rem; }
+  #main-content { flex-direction: column; height: auto; overflow: visible; }
+  #viewport-container { flex: none; height: 52vh; }
+  #sidebar { width: 100%; height: auto; }
+}

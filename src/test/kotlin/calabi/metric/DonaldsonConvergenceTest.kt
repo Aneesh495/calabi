@@ -51,4 +51,24 @@ class DonaldsonConvergenceTest {
         assertEquals(3, report.iterations)
         assertTrue(report.finalMetric.isHermitian(1e-8))
     }
+
+    @Test
+    fun testAcceleratedSolverMaintainsPositiveDefiniteness() {
+        val quintic = QuinticThreefold()
+        val basis = MonomialBasis(ambientDimension = 4, degree = 1)
+        val bundle = SectionBundle.identity(basis)
+        val solver = BalancedMetricSolver(bundle, maxIterations = 8, tolerance = 1e-4, useAcceleration = true)
+
+        val integrator = MonteCarloIntegrator(quintic, seed = 42L)
+        val points = integrator.sampleWeightedPoints(40)
+
+        val report = solver.solve(points)
+        assertTrue(report.iterations > 0)
+        assertTrue(report.finalMetric.isHermitian(1e-8))
+        val cholesky = Cholesky.factorize(report.finalMetric)
+        for (i in 0 until 5) {
+            assertTrue(cholesky.lMatrix[i, i].re > 0.0)
+        }
+    }
 }
+

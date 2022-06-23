@@ -155,5 +155,18 @@ class Cholesky(
 
             return Cholesky(l)
         }
+
+        /**
+         * Safely attempts Cholesky factorization, returning null if the matrix
+         * is not Hermitian positive-definite or has non-positive pivots.
+         */
+        fun factorizeOrNull(a: ComplexMatrix): Cholesky? {
+            return try {
+                factorize(a)
+            } catch (e: IllegalArgumentException) {
+                null
+            }
+        }
     }
 }
+

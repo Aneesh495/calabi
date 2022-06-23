@@ -169,6 +169,34 @@ class ComplexMatrix(
     fun copy(): ComplexMatrix =
         ComplexMatrix(rows, cols, data.clone())
 
+    /**
+     * Symmetrizes the matrix to be strictly Hermitian: (A + A^dagger) / 2.
+     * Sets diagonal imaginary components to zero.
+     */
+    fun hermitianPart(): ComplexMatrix {
+        require(rows == cols) { "Hermitian projection requires a square matrix: $rows x $cols" }
+        val res = ComplexMatrix(rows, cols)
+        for (i in 0 until rows) {
+            val diagOff = offset(i, i)
+            res.data[diagOff] = data[diagOff]
+            res.data[diagOff + 1] = 0.0
+            for (j in (i + 1) until cols) {
+                val offIJ = offset(i, j)
+                val offJI = offset(j, i)
+                val avgRe = (data[offIJ] + data[offJI]) * 0.5
+                val avgIm = (data[offIJ + 1] - data[offJI + 1]) * 0.5
+                val resIJ = res.offset(i, j)
+                val resJI = res.offset(j, i)
+                res.data[resIJ] = avgRe
+                res.data[resIJ + 1] = avgIm
+                res.data[resJI] = avgRe
+                res.data[resJI + 1] = -avgIm
+            }
+        }
+        return res
+    }
+
+
     companion object {
         fun identity(n: Int): ComplexMatrix {
             val mat = ComplexMatrix(n, n)

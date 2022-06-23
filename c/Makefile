@@ -24,4 +24,8 @@ lib/libcalabi_simd.$(SO_EXT): src/calabi_simd.c
 clean:
 	rm -rf bin lib *.o
 
-.PHONY: all clean
+run: bin/bench_c
+	./bin/bench_c
+
+.PHONY: all clean run
+

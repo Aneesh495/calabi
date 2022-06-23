@@ -63,13 +63,35 @@ class BalancedMetricSolver(
             relChange = sqrt(diffSq) / sqrt(hNormSq)
             onIteration?.invoke(iter + 1, relChange)
 
+            if (relChange <= tolerance) break
+
             // Next iterate via accelerator or damping
-            hCurrent = accelerator?.step(hCurrent, tVal) ?: tVal
+            var nextH: ComplexMatrix? = null
+            if (accelerator != null) {
+                val cand = accelerator.step(hCurrent, tVal).hermitianPart()
+                if (calabi.linalg.Cholesky.factorizeOrNull(cand) != null) {
+                    nextH = cand
+                }
+            }
+
+            if (nextH == null) {
+                // Damped fixed-point step: guaranteed positive-definite convex combination
+                nextH = (hCurrent * 0.5 + tVal * 0.5).hermitianPart()
+            }
+
+            // Enforce trace normalization Tr(h) = N_k
+            val trRe = nextH.trace().re
+            if (trRe > 1e-12) {
+                nextH = nextH * (dim.toDouble() / trRe)
+            }
+
+            hCurrent = nextH
             iter++
         }
 
         // Trace error check
-        val cholesky = calabi.linalg.Cholesky.factorize(hCurrent)
+        val cholesky = calabi.linalg.Cholesky.factorizeOrNull(hCurrent)
+            ?: calabi.linalg.Cholesky.factorize(hCurrent.hermitianPart() + ComplexMatrix.identity(dim) * 1e-10)
         val hInv = cholesky.inverse()
         val hInvT = hInv * tOperator.evaluate(hCurrent, points)
         val tr = hInvT.trace()
@@ -84,3 +106,4 @@ class BalancedMetricSolver(
         )
     }
 }
+
